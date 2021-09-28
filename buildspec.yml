@@ -1,0 +1,24 @@
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo $AWS_DEFAULT_REGION..
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $REPOSITORY_URI
+      - aws --version
+      - aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - REPOSITORY_URI=329.dkr.ecr.ap.amazonaws.com/influencer-db
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+  build:
+    commands:
+      - echo Creating Docker image
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:latest
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images..
+      - docker push $REPOSITORY_URI:latest
+      - printf '[{"name":"app","imageUri":"%s"}]' "$IMAGE_URI" 
